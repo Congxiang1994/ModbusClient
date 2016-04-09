@@ -722,7 +722,6 @@ public class Application extends JFrame implements ActionListener {
 
 	}
 	
-	// 
 	
 	// main·½·¨
 	public static void main(String[] args) {
