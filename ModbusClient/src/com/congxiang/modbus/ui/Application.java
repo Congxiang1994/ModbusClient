@@ -722,6 +722,8 @@ public class Application extends JFrame implements ActionListener {
 
 	}
 	
+	// ≤‚ ‘github
+	
 	// main∑Ω∑®
 	public static void main(String[] args) {
 		new Application();
