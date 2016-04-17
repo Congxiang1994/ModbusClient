@@ -121,11 +121,11 @@ public class ModbusMsgPanel extends JPanel {
 		// modbus命令表格
 		gridbaglayout.setConstraints(jsptablefriends, new GBC(0).setWeight(1, 1).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(jsptablefriends);
-
+/*
 		// 更新modbus命令按钮
 		gridbaglayout.setConstraints(btRefresh, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(btRefresh);
-
+*/
 	}
 
 	public static void main(String[] args) {

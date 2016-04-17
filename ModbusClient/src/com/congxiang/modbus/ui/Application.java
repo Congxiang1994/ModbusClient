@@ -252,7 +252,7 @@ public class Application extends JFrame implements ActionListener {
 			// 2.计算CRC16校验码，注意CRC校验低8位在前，高8位在后
 			int crc = CRC16.calcCrc16(ByteUtil.hexStringToBytes(strModbusMsg));
 			String strCRC = String.format("%04x", crc).toUpperCase();
-			System.out.println(strCRC);
+			//System.out.println(strCRC);
 			strModbusMsg = strModbusMsg + strCRC.substring(2, 4); // CRC校验低8位
 			strModbusMsg = strModbusMsg + strCRC.substring(0, 2); // CRC校验高8位
 
@@ -262,11 +262,12 @@ public class Application extends JFrame implements ActionListener {
 				if (strModbusMsg.equals(modbusMsgPanel.tableModel.getValueAt(i, 0))) {
 					printInformation(-1, "警告：该modbus命令已经出现过了！！！");
 					isModbusMsgExist = true;
+					break; // 下面的代码不需要执行
 				}
 			}
 			
-			// 4.将新生成的modbus命令放到下方列表中
-			if (isModbusMsgExist == false) {
+			// 4.将新生成的modbus命令放到下方列表中,！！！！！！！！>>>>>>>>>>>这里需要判断是否连接数据库，如果没有的话，则不能添加modbus命令
+			if (isModbusMsgExist == false && isConnectServer == true) {
 				String str[] = new String[1];
 				str[0] = strModbusMsg;
 				modbusMsgPanel.tableModel.addRow(str);
@@ -274,6 +275,19 @@ public class Application extends JFrame implements ActionListener {
 				/**
 				 * >>>存在的问题： 1.不能将新插入的数据放在第一行 2.不能够识别非法字符
 				 * */
+				
+				// 5.组装添加modbus命令的消息类型0x0F,消息内容：0x0F+modbus命令
+				String strInsertModbusOrder = new String(new byte[] {0x0F}) + strModbusMsg; 
+				byte[] buffSendInsertModbusOrder = strInsertModbusOrder.getBytes();
+				// 6.将消息发送给Server程序
+				try {
+					sendMsg(buffOutputStream, buffSendInsertModbusOrder, buffSendInsertModbusOrder.length);// ---------------------------------------------------------------------write
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				
+			}else{
+				printInformation(-1, "警告：尚未连接server服务器程序或者已经存在这条modbus命令，不能添加modbus命令！！！");
 			}
 			/* -------------------------------------------------------------------------------------------------------------------- */
 		} else if (e.getSource() == modbusMsgPanel.btRefresh) { /* 更新modbus命令到数据库中 ----------------------------------------- */
@@ -321,7 +335,20 @@ public class Application extends JFrame implements ActionListener {
 			int selectedRow = modbusMsgPanel.tableModbusOrderList.getSelectedRow(); // 获得选中行索引
 			printInformation(1, "删除第" + selectedRow + "行的modbus命令");
 			
-			// 2.删除选中行
+
+			
+			// 2.组装添加modbus命令的消息类型0x10,消息内容：0x10+modbus命令
+			String strDeleteModbusOrder = new String(new byte[] {0x10}) + modbusMsgPanel.tableModel.getValueAt(selectedRow, 0); 
+			byte[] buffSendDeleteModbusOrder = strDeleteModbusOrder.getBytes();
+
+			// 3.将消息发送给Server程序
+			try {
+				sendMsg(buffOutputStream, buffSendDeleteModbusOrder, buffSendDeleteModbusOrder.length);// ---------------------------------------------------------------------write
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			
+			// 4.删除选中行
 			modbusMsgPanel.tableModel.removeRow(selectedRow);
 		}
 	}
@@ -454,6 +481,7 @@ public class Application extends JFrame implements ActionListener {
 						break;
 						
 					case 0x0D:
+						printInformation(1, "消息类型：0x0D:接收到server返回的设备实时状态树");
 						/* 对接收的设备实时状态消息进行处理 */
 						byte[] buffRecvFirst = new byte[numRecv];
 						for (int i = 0; i < numRecv; i++) {
@@ -481,8 +509,45 @@ public class Application extends JFrame implements ActionListener {
 						//printInformation(1, "消息类型：0x08:刷新树形结构图成功");
 						break;
 						
+					case 0x0E:
+						printInformation(1, "消息类型：0x0E:接收到server返回的modbus命令");
+					
+						// 1.解析接收到的数据
+						String strModbusOrder = new String(buffRecv).substring(1, 17); // 直接将字节数组按照ascll码的方式转换成string类型
+						//System.out.println(strModbusOrder);
+						
+						// 2.遍历表格，判断列表中是否已经存在这条modbus命令
+						boolean isModbusMsgExist = false;
+						for (int i = 0; i < modbusMsgPanel.tableModel.getRowCount(); i++) {
+							if (strModbusOrder.equals(modbusMsgPanel.tableModel.getValueAt(i, 0))) {
+								printInformation(-1, "警告：该modbus命令已经出现过了！！！");
+								isModbusMsgExist = true;
+							}
+						}
+						
+						// 3.向modbus命令列表中添加一条数据
+						if (isModbusMsgExist == false) {
+							String str[] = new String[1];
+							str[0] = strModbusOrder;
+							modbusMsgPanel.tableModel.addRow(str);
+							printInformation(1, "添加modbus命令成功。");
+						}
+						
+						// 4.将消息类型返回给Server程序，（消息从哪里来，就到哪里结束）
+						byte[] buff0E = new byte[] { 0x0E };
+						sendMsg(buffOutputStream, buff0E, 1);//---------------------------------------------------------------------write
+						break;
+						
+					case 0x0F:
+						printInformation(1, "消息类型：0x0F:上位机添加modbus命令成功。");
+						break;
+						
+					case 0x10:
+						printInformation(1, "消息类型：0x10:上位机删除modbus命令成功。");
+						break;
+						
 					default:
-						// printInformation(-1, "警告，接收到未知消息类型！！！");
+						printInformation(-1, "警告，接收到未知消息类型！！！");
 						break;
 					}
 				} catch (IOException e) {
@@ -494,7 +559,7 @@ public class Application extends JFrame implements ActionListener {
 	}
 
 	
-	/**向server服务器程序请求设备的状态：0x08  辅助线程------------------------------------------------------------------------------------------------ */
+	/**向server服务器程序请求设备的状态：0x0D  辅助线程------------------------------------------------------------------------------------------------ */
 	/** -------------------------------------------------------------------------------------------------------------------------------------------- */
 	class RequestEquipmentState implements Runnable {
 		//boolean requestEquipmentStateStarted;
@@ -517,7 +582,7 @@ public class Application extends JFrame implements ActionListener {
 				//while (requestEquipmentStateStarted) {
 					printInformation(1, "辅助线程->请求设备状态：开始请求各级设备的状态...");
 
-					// 消息类型为0x08 ，这里只需要发送一个消息类型就行，不需要附带其他数据
+					// 消息类型为0x0D ，这里只需要发送一个消息类型就行，不需要附带其他数据
 					String strMsg = "0D";
 					byte[] buffSend;
 					buffSend = ByteUtil.hexStringToBytes(strMsg); // 将string转换成byte数组
