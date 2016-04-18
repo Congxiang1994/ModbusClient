@@ -7,6 +7,7 @@ import java.awt.GridLayout;
 import java.awt.MenuItem;
 import java.awt.Panel;
 import java.awt.PopupMenu;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -175,6 +176,14 @@ public class Application extends JFrame implements ActionListener {
 		// 更新数据库中modbus命令的按钮
 		modbusMsgPanel.btRefresh.addActionListener(this);
 		/* -------------------------------------------------------------------------------------------------------------------- */
+		// 设置实时modbus监测数据的列宽
+		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(0).setPreferredWidth(200);
+		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(1).setPreferredWidth(200);
+		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(2).setPreferredWidth(200);
+		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(3).setPreferredWidth(600);
+		/* -------------------------------------------------------------------------------------------------------------------- */
+		
+		/* -------------------------------------------------------------------------------------------------------------------- */
 		
 		/* 设置窗口的属性------------------------------------------------------------------------------------------------------- */
 		this.setTitle("上位机应用程序");
@@ -271,6 +280,16 @@ public class Application extends JFrame implements ActionListener {
 				String str[] = new String[1];
 				str[0] = strModbusMsg;
 				modbusMsgPanel.tableModel.addRow(str);
+				//modbusMsgPanel.tableModbusOrderList.setRowSelectionInterval(modbusMsgPanel.tableModel.getRowCount()-1, modbusMsgPanel.tableModel.getRowCount()-1);;
+				
+				/* 让滚轮自动滚到最后一行 */
+				int rowCount = modbusMsgPanel.tableModbusOrderList.getRowCount();
+				modbusMsgPanel.tableModbusOrderList.getSelectionModel().setSelectionInterval(rowCount-1, rowCount-1);
+				Rectangle rect = modbusMsgPanel.tableModbusOrderList.getCellRect(rowCount-1, 0, true);
+				//modbusMsgPanel.tableModbusOrderList.repaint(); //若需要的话
+				modbusMsgPanel.tableModbusOrderList.updateUI();//若需要的话
+				modbusMsgPanel.tableModbusOrderList.scrollRectToVisible(rect);
+				
 				printInformation(1, "添加modbus命令成功。");
 				/**
 				 * >>>存在的问题： 1.不能将新插入的数据放在第一行 2.不能够识别非法字符
@@ -461,6 +480,7 @@ public class Application extends JFrame implements ActionListener {
 							
 							// 2.将modbusdata监测数据加进modbusdata实时监测数据列表中
 							realTimeModbusDataPanel.tableModel.addRow(strModbusDataMsg);
+							
 						}
 						byte[] buff0B = new byte[] { 0x0B };
 						sendMsg(buffOutputStream, buff0B, 1);//---------------------------------------------------------------------write
@@ -476,6 +496,7 @@ public class Application extends JFrame implements ActionListener {
 							printInformation(1, "消息类型：0x0C:接收到单条设备状态消息:"+strModbusStateData[0]+","+strModbusStateData[1]+","+strModbusStateData[2]+","+strModbusStateData[3]);
 							// 2.将modbusdata监测数据加进modbusdata实时监测数据列表中
 							stateMsgPanel.tableModel.addRow(strModbusStateData);
+							
 						}
 						
 						break;
@@ -531,6 +552,8 @@ public class Application extends JFrame implements ActionListener {
 							str[0] = strModbusOrder;
 							modbusMsgPanel.tableModel.addRow(str);
 							printInformation(1, "添加modbus命令成功。");
+							
+							
 						}
 						
 						// 4.将消息类型返回给Server程序，（消息从哪里来，就到哪里结束）

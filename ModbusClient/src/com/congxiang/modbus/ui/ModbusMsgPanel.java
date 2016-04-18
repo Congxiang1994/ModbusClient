@@ -47,6 +47,7 @@ public class ModbusMsgPanel extends JPanel {
 
 	public JTable tableModbusOrderList = new JTable();
 	public DefaultTableModel tableModel; // 表格模型对象
+	public JScrollPane jsptablefriends;
 
 	public JButton btRefresh = new JButton("更新modbus命令到数据库中");
 
@@ -54,13 +55,14 @@ public class ModbusMsgPanel extends JPanel {
 	public ModbusMsgPanel() {
 		super();
 
+
 		
 		// 显示表头
 		String[] columnNames = { "modbu命令" }; // 列名
 		String[][] tableVales = {}; // 数据
 		tableModel = new DefaultTableModel(tableVales, columnNames);
 		tableModbusOrderList = new JTable(tableModel);
-		JScrollPane jsptablefriends = new JScrollPane(tableModbusOrderList); // 支持滚动
+		jsptablefriends = new JScrollPane(tableModbusOrderList); // 支持滚动
 		jsptablefriends.setBackground(new Color(250, 222, 114));
 		
 		

@@ -23,20 +23,23 @@ public class RealTimeModbusDataPanel extends JPanel {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public static JLabel laModbusData = new JLabel("实时ModbusData监测数据列表:",SwingConstants.LEFT);
-	public static JTable tableRealTimeModbusData = new JTable();
+	public JLabel laModbusData = new JLabel("实时ModbusData监测数据列表:",SwingConstants.LEFT);
+	public JTable tableRealTimeModbusData = new JTable();
 	
 	public DefaultTableModel tableModel; // 表格模型对象
 	
 	// 构造方法
 	
 	public RealTimeModbusDataPanel() {
-
 		super();
+
+		
 		// 显示表头
 		String[] columnNames = { "时间", "终端IP地址" ,"下位设备ID", "ModbusData" }; // 列名
 		String[][] tableVales = {}; // 数据
 		tableModel = new DefaultTableModel(tableVales, columnNames);
+		
+		
 		tableRealTimeModbusData = new JTable(tableModel);
 		JScrollPane jsptableModbusData = new JScrollPane(tableRealTimeModbusData); // 支持滚动
 		jsptableModbusData.setBackground(new Color(250, 222, 114));
