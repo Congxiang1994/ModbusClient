@@ -42,6 +42,9 @@ public class ModbusMsgPanel extends JPanel {
 
 	public JLabel laCountLow = new JLabel("数量低:", SwingConstants.RIGHT);
 	public JTextField tfCountLow = new JTextField("0A");
+	
+	public JLabel laModbusTerminalIp = new JLabel("终端IP:", SwingConstants.RIGHT);
+	public JTextField tfModbusTerminalIp = new JTextField("172.29.143.67");
 
 	public JButton btGenerate = new JButton("生成modbus命令，并保存到下方列表");
 
@@ -58,7 +61,7 @@ public class ModbusMsgPanel extends JPanel {
 
 		
 		// 显示表头
-		String[] columnNames = { "modbu命令" }; // 列名
+		String[] columnNames = { "modbus命令" ,"终端IP"}; // 列名
 		String[][] tableVales = {}; // 数据
 		tableModel = new DefaultTableModel(tableVales, columnNames);
 		tableModbusOrderList = new JTable(tableModel);
@@ -115,6 +118,14 @@ public class ModbusMsgPanel extends JPanel {
 
 		gridbaglayout.setConstraints(tfCountLow, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfCountLow);
+		
+		// modbus终端IP
+		gridbaglayout.setConstraints(laModbusTerminalIp, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		this.add(laModbusTerminalIp);
+
+		gridbaglayout.setConstraints(tfModbusTerminalIp, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		this.add(tfModbusTerminalIp);
+		
 
 		// 生成modbus命令按钮
 		gridbaglayout.setConstraints(btGenerate, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));

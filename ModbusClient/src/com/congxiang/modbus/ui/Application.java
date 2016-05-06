@@ -488,10 +488,10 @@ public class Application extends JFrame implements ActionListener {
 						break;
 						
 					case 0x0C:
-						printInformation(1, "消息类型：0x0C:接收到server返回的设备实时modbusdata监测数据");
+						printInformation(1, "消息类型：0x0C:接收到server返回的单条设备实时状态信息");
 						String[] strModbusStateData = new String[4]; // 用来存放下面4个变量
 						if(numRecv > 1){
-							// 1.在工具类中写一个方法，返回一个数组：时间 + modbus终端IP地址 + 设备ID + modbusdata监测数据
+							// 1.在工具类中写一个方法，返回一个数组：时间 + modbus终端IP地址 + 设备ID + 设备状态
 							strModbusStateData = byteModbusDataToStringArray(buffRecv, numRecv);
 							printInformation(1, "消息类型：0x0C:接收到单条设备状态消息:"+strModbusStateData[0]+","+strModbusStateData[1]+","+strModbusStateData[2]+","+strModbusStateData[3]);
 							// 2.将modbusdata监测数据加进modbusdata实时监测数据列表中
@@ -575,7 +575,15 @@ public class Application extends JFrame implements ActionListener {
 					}
 				} catch (IOException e) {
 					printInformation(-1, "警告，可能已经断开与server程序的连接！！！");
-					//e.printStackTrace();
+					receiveMsgFromServerStarted = false;
+					try {
+						socket.close();
+						buffInputStream.close();
+						buffOutputStream.close();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+
 				}
 			}
 		}
@@ -764,7 +772,8 @@ public class Application extends JFrame implements ActionListener {
 	 * @author CongXiang 思路：根据标识量的不同，选择是“控制台直接输出”还是“在程序界面输出”
 	 * */
 	public void printInformation(int systemOrApplication, String strMsg) {
-		if (systemOrApplication == 0) { // 系统输出
+/*		
+ 		if (systemOrApplication == 0) { // 系统输出
 			System.out.println(strMsg);
 		} else if (systemOrApplication == 1) { // 程序界面底栏输出输出
 			tfState.setForeground(Color.BLACK);
@@ -774,6 +783,26 @@ public class Application extends JFrame implements ActionListener {
 			tfState.setText(strMsg);
 		} else {
 			System.out.println("输出方式出错：请检查输出方式，-1是出错消息输出，0是系统输出，1是界面底栏输出");
+		}
+*/		
+		switch(systemOrApplication){
+
+		case 0:// 系统输出
+			System.out.println(strMsg.trim());
+			break;
+			
+		case 1:// 程序界面输出
+			tfState.setForeground(Color.BLACK);
+			tfState.setText(strMsg);
+			break;
+			
+		case -1:// 出错消息输出
+			tfState.setForeground(Color.RED);
+			tfState.setText(strMsg);
+			break;
+		default:
+			System.out.println("输出方式出错：请检查输出方式，-1是出错消息输出，0是系统输出，1是界面输出");
+			break;
 		}
 	}
 	
@@ -804,16 +833,52 @@ public class Application extends JFrame implements ActionListener {
 		strModbusDataMsg[2] = str.substring(pos, pos + 2); // 下位设备的ID
 
 		pos = pos + 2; // 指向modbusdata实时监测数据开始
-		strModbusDataMsg[3] = str.substring(pos, length); // modbusdata实时监测数据
+		strModbusDataMsg[3] = modbusDataToRealData(str.substring(pos, length)); // modbusdata实时监测数据
+		
+		/** 功能：将可以识别的modbus消息转换成正常描述方式  */
 
 		return strModbusDataMsg;
 
 	}
 	
-	// 111
+	/**
+	 * ---将modbusdata装换成能够识别的温湿度
+	 * @author CongXiang
+	 * 参数：
+	 * String modbusData
+	 * 返回值：
+	 * string:设备号+命令号+温度+湿度
+	 * 举例：
+	 * 02 03 04 41 BA 28 F6 42 62 44 B3 18 8A 
+	 * */
+	public static String modbusDataToRealData(String modbusData){
+		
+		// 1.提取设备号
+		String deviceId = modbusData.substring(0,2);
+		
+		if(deviceId.equals("02")){
+			// 2.提取命令号
+			String modbusOrder = modbusData.substring(2,4);
+			
+			// 3.提取温度
+	        Float temp =Float.intBitsToFloat(Integer.valueOf(modbusData.substring(6, 14), 16));
+	        
+			// 4.提取湿度
+	        Float humi =Float.intBitsToFloat(Integer.valueOf(modbusData.substring(14, 22), 16));
+	        
+	        // 5.返回数据
+	        String str="设备:"+deviceId + ",命令号:" + modbusOrder + ",温度:" + temp + ",湿度:" + humi + "";
+			return str;
+		}else{
+			return modbusData; // 不能解析的modbus数据
+		}
+
+		
+	}
 	
 	// main方法
 	public static void main(String[] args) {
 		new Application();
+		//System.out.println(Application.modbusDataToRealData("02030441BA28F6426244B3188A"));
 	}
 }
