@@ -193,6 +193,8 @@ public class Application extends JFrame implements ActionListener {
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 设置单击关闭按钮能够关闭主进程
 		this.setVisible(true); // 显示窗口
 		/* -------------------------------------------------------------------------------------------------------------------- */
+		// 设置按钮状态
+		this.buttonState(true, false);
 	}
 
 	/* 消息相应事件 */
@@ -200,6 +202,8 @@ public class Application extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == connectServerPanel.btConnectServer) { /* 请求连接服务器 -----------------------------------------*/
 			printInformation(1, "开始连接服务器程序...");
+			// 设置按钮状态
+			this.buttonState(false, false);
 			try {
 				// 1.建立socket通信的必要变量
 				server = new Socket(connectServerPanel.tfIPAddress.getText().trim(), Integer.valueOf(connectServerPanel.tfPort.getText().trim()));
@@ -239,11 +243,14 @@ public class Application extends JFrame implements ActionListener {
 				// 6.建立请求设备状态的线程，并启动该线程
 				RequestEquipmentState requestEquipmentState = new RequestEquipmentState(server, buffInputStream, buffOutputStream);
 				new Thread(requestEquipmentState).start();
-
+				// 设置按钮状态
+				this.buttonState(false, true);
 				
 				
 			} catch (NumberFormatException | IOException | InterruptedException e1) {
 				printInformation(-1, "警告：连接服务器出现错误，请检查网络连接及连接参数！！！");
+				// 设置按钮状态
+				this.buttonState(true, false);
 				// e1.printStackTrace();
 			}
 			/* -------------------------------------------------------------------------------------------------------------------- */
@@ -277,8 +284,11 @@ public class Application extends JFrame implements ActionListener {
 			
 			// 4.将新生成的modbus命令放到下方列表中,！！！！！！！！>>>>>>>>>>>这里需要判断是否连接数据库，如果没有的话，则不能添加modbus命令
 			if (isModbusMsgExist == false && isConnectServer == true) {
-				String str[] = new String[1];
+				String strTerminalIP;
+				String str[] = new String[2];
 				str[0] = strModbusMsg;
+				strTerminalIP = "/"+modbusMsgPanel.tfModbusTerminalIp.getText().trim();
+				str[1] = strTerminalIP;
 				modbusMsgPanel.tableModel.addRow(str);
 				//modbusMsgPanel.tableModbusOrderList.setRowSelectionInterval(modbusMsgPanel.tableModel.getRowCount()-1, modbusMsgPanel.tableModel.getRowCount()-1);;
 				
@@ -294,6 +304,8 @@ public class Application extends JFrame implements ActionListener {
 				/**
 				 * >>>存在的问题： 1.不能将新插入的数据放在第一行 2.不能够识别非法字符
 				 * */
+				// 4-5.将modbus终端的IP地址添加到modbus消息中
+				strModbusMsg = strModbusMsg + ByteUtil.intToString(strTerminalIP.length()) + strTerminalIP;
 				
 				// 5.组装添加modbus命令的消息类型0x0F,消息内容：0x0F+modbus命令
 				String strInsertModbusOrder = new String(new byte[] {0x0F}) + strModbusMsg; 
@@ -350,14 +362,16 @@ public class Application extends JFrame implements ActionListener {
 			/* -------------------------------------------------------------------------------------------------------------------- */
 		} else if (e.getSource() == menuItem) { /* 右键菜单，modbus命令列表中的右键删除功能 ------------------------------------------ */
 			
+			String strTerminalIp;
+			
 			// 1.获取选中的索引号
 			int selectedRow = modbusMsgPanel.tableModbusOrderList.getSelectedRow(); // 获得选中行索引
-			printInformation(1, "删除第" + selectedRow + "行的modbus命令");
-			
-
+			printInformation(1, "删除第" + selectedRow + "行的modbus命令");			
 			
 			// 2.组装添加modbus命令的消息类型0x10,消息内容：0x10+modbus命令
 			String strDeleteModbusOrder = new String(new byte[] {0x10}) + modbusMsgPanel.tableModel.getValueAt(selectedRow, 0); 
+			strTerminalIp = (String) modbusMsgPanel.tableModel.getValueAt(selectedRow, 1);
+			strDeleteModbusOrder = strDeleteModbusOrder + ByteUtil.intToString(strTerminalIp.length()) + strTerminalIp;
 			byte[] buffSendDeleteModbusOrder = strDeleteModbusOrder.getBytes();
 
 			// 3.将消息发送给Server程序
@@ -409,6 +423,7 @@ public class Application extends JFrame implements ActionListener {
 					// System.out.println("接收的字符数量为："+numRecv);
 					// 判断从server服务器端接受的数据是不是为空
 					if (numRecv < 0) {
+						buttonState(true, false);
 						printInformation(-1, "警告：接收消息出错！！！");
 						try {
 							this.socket.close();
@@ -492,7 +507,7 @@ public class Application extends JFrame implements ActionListener {
 						String[] strModbusStateData = new String[4]; // 用来存放下面4个变量
 						if(numRecv > 1){
 							// 1.在工具类中写一个方法，返回一个数组：时间 + modbus终端IP地址 + 设备ID + 设备状态
-							strModbusStateData = byteModbusDataToStringArray(buffRecv, numRecv);
+							strModbusStateData = byteDeviceStateToStringArray(buffRecv, numRecv);
 							printInformation(1, "消息类型：0x0C:接收到单条设备状态消息:"+strModbusStateData[0]+","+strModbusStateData[1]+","+strModbusStateData[2]+","+strModbusStateData[3]);
 							// 2.将modbusdata监测数据加进modbusdata实时监测数据列表中
 							stateMsgPanel.tableModel.addRow(strModbusStateData);
@@ -532,9 +547,9 @@ public class Application extends JFrame implements ActionListener {
 						
 					case 0x0E:
 						printInformation(1, "消息类型：0x0E:接收到server返回的modbus命令");
-					
+						String strBuffRecv = new String(buffRecv);
 						// 1.解析接收到的数据
-						String strModbusOrder = new String(buffRecv).substring(1, 17); // 直接将字节数组按照ascll码的方式转换成string类型
+						String strModbusOrder = strBuffRecv.substring(1, 17); // 直接将字节数组按照ascll码的方式转换成string类型
 						//System.out.println(strModbusOrder);
 						
 						// 2.遍历表格，判断列表中是否已经存在这条modbus命令
@@ -548,8 +563,10 @@ public class Application extends JFrame implements ActionListener {
 						
 						// 3.向modbus命令列表中添加一条数据
 						if (isModbusMsgExist == false) {
-							String str[] = new String[1];
+							String str[] = new String[2];
 							str[0] = strModbusOrder;
+							int lengthOfTerminalIp = Integer.valueOf(strBuffRecv.substring(17,19));
+							str[1] = strBuffRecv.substring(19, 19+lengthOfTerminalIp);
 							modbusMsgPanel.tableModel.addRow(str);
 							printInformation(1, "添加modbus命令成功。");
 							
@@ -574,6 +591,8 @@ public class Application extends JFrame implements ActionListener {
 						break;
 					}
 				} catch (IOException e) {
+					// 设置按钮状态
+					buttonState(true, false);
 					printInformation(-1, "警告，可能已经断开与server程序的连接！！！");
 					receiveMsgFromServerStarted = false;
 					try {
@@ -832,10 +851,42 @@ public class Application extends JFrame implements ActionListener {
 		pos = pos + lengthOfIP; // 指向下位设备ID开始
 		strModbusDataMsg[2] = str.substring(pos, pos + 2); // 下位设备的ID
 
-		pos = pos + 2; // 指向modbusdata实时监测数据开始
+		// pos = pos + 2; // 指向modbusdata实时监测数据开始
 		strModbusDataMsg[3] = modbusDataToRealData(str.substring(pos, length)); // modbusdata实时监测数据
 		
 		/** 功能：将可以识别的modbus消息转换成正常描述方式  */
+
+		return strModbusDataMsg;
+
+	}
+	/**
+	 * ---将包含设备状态的的byte[]转换成string[]
+	 * @author CongXiang
+	 * 参数：
+	 * byte[]：功能码 + 时间 + 地址长度 + modbus终端的IP地址 + 下位设备ID + 设备状态
+	 * length：byte[]的实际有效数据的长度
+	 * 返回值：
+	 * string[]：时间 + modbus终端的IP地址 + 下位设备ID + modbusdata
+	 * */
+	public static String[] byteDeviceStateToStringArray(byte[] byteModbusData, int length) {
+		int pos, lengthOfIP;
+		String[] strModbusDataMsg = new String[4];
+		String str = new String(byteModbusData);
+
+		pos = 1; // 指向时间开始
+		strModbusDataMsg[0] = str.substring(pos, pos + 19); // 时间
+
+		pos = pos + 19; // 指向IP地址长度的开始
+		lengthOfIP = Integer.valueOf(str.substring(pos, pos + 2)); // IP地址的长度
+
+		pos = pos + 2; // 指向IP地址的开始
+		strModbusDataMsg[1] = str.substring(pos, pos + lengthOfIP); // modbus终端的IP地址
+
+		pos = pos + lengthOfIP; // 指向下位设备ID开始
+		strModbusDataMsg[2] = str.substring(pos, pos + 2); // 下位设备的ID
+
+		pos = pos + 2; // 指向modbusdata实时监测数据开始
+		strModbusDataMsg[3] = str.substring(pos, length); // modbusdata实时监测数据
 
 		return strModbusDataMsg;
 
@@ -848,11 +899,15 @@ public class Application extends JFrame implements ActionListener {
 	 * String modbusData
 	 * 返回值：
 	 * string:设备号+命令号+温度+湿度
-	 * 举例：
-	 * 02 03 04 41 BA 28 F6 42 62 44 B3 18 8A 
+	 * 举例：01030000000AC5CD
+	 * 02  03  00  00  00  04  44  3A
+	 * 02 03 08 41 BA 28 F6 42 62 44 B3 18 8A 
+	 * 02 03 08 41 BA 28 F6 42 62 44 B3 4D 8A
 	 * */
 	public static String modbusDataToRealData(String modbusData){
 		
+		//System.out.println(modbusData);
+
 		// 1.提取设备号
 		String deviceId = modbusData.substring(0,2);
 		
@@ -876,9 +931,14 @@ public class Application extends JFrame implements ActionListener {
 		
 	}
 	
+	// 设置界面按钮状态的方法
+	public  void buttonState(boolean isBtConnectServer, boolean isBtGenerateModbusOrder){
+		connectServerPanel.btConnectServer.setEnabled(isBtConnectServer);
+		modbusMsgPanel.btGenerate.setEnabled(isBtGenerateModbusOrder);
+	}
 	// main方法
 	public static void main(String[] args) {
 		new Application();
-		//System.out.println(Application.modbusDataToRealData("02030441BA28F6426244B3188A"));
+		//System.out.println(Application.modbusDataToRealData("02030841BA28F6426244B34D8A"));
 	}
 }

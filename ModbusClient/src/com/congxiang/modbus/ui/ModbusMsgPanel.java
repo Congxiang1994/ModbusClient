@@ -26,7 +26,7 @@ public class ModbusMsgPanel extends JPanel {
 	//01030000000AC5CD
 	
 	public JLabel laDevice = new JLabel("…Ë±∏∫≈:", SwingConstants.RIGHT);
-	public JTextField tfDevice = new JTextField("01");
+	public JTextField tfDevice = new JTextField("02");
 
 	public JLabel laOrderNumber = new JLabel("√¸¡Ó∫≈:", SwingConstants.RIGHT);
 	public JTextField tfOrderNumber = new JTextField("03");
@@ -41,7 +41,7 @@ public class ModbusMsgPanel extends JPanel {
 	public JTextField tfCountHigh = new JTextField("00");
 
 	public JLabel laCountLow = new JLabel(" ˝¡øµÕ:", SwingConstants.RIGHT);
-	public JTextField tfCountLow = new JTextField("0A");
+	public JTextField tfCountLow = new JTextField("04");
 	
 	public JLabel laModbusTerminalIp = new JLabel("÷’∂ÀIP:", SwingConstants.RIGHT);
 	public JTextField tfModbusTerminalIp = new JTextField("172.29.143.67");
