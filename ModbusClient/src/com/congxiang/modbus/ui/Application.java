@@ -904,31 +904,45 @@ public class Application extends JFrame implements ActionListener {
 	 * 02 03 08 41 BA 28 F6 42 62 44 B3 18 8A 
 	 * 02 03 08 41 BA 28 F6 42 62 44 B3 4D 8A
 	 * */
-	public static String modbusDataToRealData(String modbusData){
-		
-		//System.out.println(modbusData);
+	public static String modbusDataToRealData(String modbusData) {
 
-		// 1.提取设备号
-		String deviceId = modbusData.substring(0,2);
+		/* 这里需要进行CRC校验！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！ */
+		int lengthOfModbusData = modbusData.length();
+		if(lengthOfModbusData <= 4){
+			return modbusData+"(data error)"; // 有错的数据
+		}
+		// 1.重新计算CRC校验码【出去最后两个字节，string中对应的是4个字符】
+		int crc = CRC16.calcCrc16(ByteUtil.hexStringToBytes(modbusData.substring(0, lengthOfModbusData - 4)));
+		String strCRC = String.format("%04x", crc).toUpperCase();
 		
-		if(deviceId.equals("02")){
-			// 2.提取命令号
-			String modbusOrder = modbusData.substring(2,4);
-			
-			// 3.提取温度
-	        Float temp =Float.intBitsToFloat(Integer.valueOf(modbusData.substring(6, 14), 16));
-	        
-			// 4.提取湿度
-	        Float humi =Float.intBitsToFloat(Integer.valueOf(modbusData.substring(14, 22), 16));
-	        
-	        // 5.返回数据
-	        String str="设备:"+deviceId + ",命令号:" + modbusOrder + ",温度:" + temp + ",湿度:" + humi + "";
-			return str;
-		}else{
-			return modbusData; // 不能解析的modbus数据
+		// 2.将计算出来的crc校验码与原数据中的进行对比
+		if ((strCRC.substring(2, 4).equals(modbusData.substring(lengthOfModbusData - 4, lengthOfModbusData - 2))) 
+				&& (strCRC.substring(0, 2).equals(modbusData.substring(lengthOfModbusData - 2, lengthOfModbusData)))) {
+
+			/* --- */
+			// 1.提取设备号
+			String deviceId = modbusData.substring(0, 2);
+			if (deviceId.equals("01")) {
+				// 2.提取命令号
+				String modbusOrder = modbusData.substring(2, 4);
+
+				// 3.提取温度
+				Float temp = Float.intBitsToFloat(Integer.valueOf(modbusData.substring(6, 14), 16));
+
+				// 4.提取湿度
+				Float humi = Float.intBitsToFloat(Integer.valueOf(modbusData.substring(14, 22), 16));
+
+				// 5.返回数据
+				String str = "设备:" + deviceId + ",命令号:" + modbusOrder + ",温度:" + temp + ",湿度:" + humi + "";
+				return str;
+			} else {
+				return modbusData+"(can not be indetified)"; // 不能解析的modbus数据
+			}
+
+		} else {
+			return modbusData+"(data error)"; // 有错的数据
 		}
 
-		
 	}
 	
 	// 设置界面按钮状态的方法
@@ -939,6 +953,6 @@ public class Application extends JFrame implements ActionListener {
 	// main方法
 	public static void main(String[] args) {
 		new Application();
-		//System.out.println(Application.modbusDataToRealData("02030841BA28F6426244B34D8A"));
+		//System.out.println(Application.modbusDataToRealData("B805"));
 	}
 }
