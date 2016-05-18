@@ -201,7 +201,7 @@ public class Application extends JFrame implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == connectServerPanel.btConnectServer) { /* 请求连接服务器 -----------------------------------------*/
-			printInformation(1, "开始连接服务器程序...");
+			////printInformation(1, "开始连接服务器程序...");
 			// 设置按钮状态
 			this.buttonState(false, false);
 			try {
@@ -211,12 +211,12 @@ public class Application extends JFrame implements ActionListener {
 				outPutStream = server.getOutputStream();
 				buffInputStream = new BufferedInputStream(server.getInputStream());
 				buffOutputStream = new BufferedOutputStream(server.getOutputStream());
-				printInformation(1, "连接服务器成功。");
+				printInformation(1, "连接服务器成功......");
 
 				// 2.建立接收数据的线程，并启动该线程 
 				ReceiveMsgFromServer receiveMsgFromServer = new ReceiveMsgFromServer(server, buffInputStream, buffOutputStream);
 				new Thread(receiveMsgFromServer).start(); // 启动接收数据的线程
-				printInformation(1, "启动接收数据的线程。");
+				////printInformation(1, "启动接收数据的线程。");
 
 				Thread.sleep(1000);// 睡眠一秒，等待server服务器建立相关的接收数据，否则服务器端没法正确接收数据
 
@@ -300,7 +300,7 @@ public class Application extends JFrame implements ActionListener {
 				modbusMsgPanel.tableModbusOrderList.updateUI();//若需要的话
 				modbusMsgPanel.tableModbusOrderList.scrollRectToVisible(rect);
 				
-				printInformation(1, "添加modbus命令成功。");
+				printInformation(1, "添加modbus命令，并发送给Server程序......");
 				/**
 				 * >>>存在的问题： 1.不能将新插入的数据放在第一行 2.不能够识别非法字符
 				 * */
@@ -366,7 +366,7 @@ public class Application extends JFrame implements ActionListener {
 			
 			// 1.获取选中的索引号
 			int selectedRow = modbusMsgPanel.tableModbusOrderList.getSelectedRow(); // 获得选中行索引
-			printInformation(1, "删除第" + selectedRow + "行的modbus命令");			
+			printInformation(1, "删除第" + selectedRow + "行的modbus命令:" + modbusMsgPanel.tableModel.getValueAt(selectedRow, 0) + "......");			
 			
 			// 2.组装添加modbus命令的消息类型0x10,消息内容：0x10+modbus命令
 			String strDeleteModbusOrder = new String(new byte[] {0x10}) + modbusMsgPanel.tableModel.getValueAt(selectedRow, 0); 
@@ -408,7 +408,7 @@ public class Application extends JFrame implements ActionListener {
 
 		@Override
 		public void run() {
-			printInformation(1, "开始进入接收数据线程...");
+			////printInformation(1, "开始进入接收数据线程...");
 			receiveMsgFromServerStarted = true;
 			
 			while (receiveMsgFromServerStarted) {
@@ -446,15 +446,15 @@ public class Application extends JFrame implements ActionListener {
 					switch (buffRecv[0]) {
 					
 					case 0x00:
-						printInformation(1, "消息类型：0x00:连接服务器成功，并成功发送0x00给服务器，标识了自己身份。");
+						////printInformation(1, "消息类型：0x00:连接服务器成功，并成功发送0x00给服务器，标识了自己身份。");
 						break;
 						
 					case 0x06:
-						printInformation(1, "消息类型：0x06:发送modbus命令给server服务器程序成功。");
+						////printInformation(1, "消息类型：0x06:发送modbus命令给server服务器程序成功。");
 						break;
 						
 					case 0x08:
-						printInformation(1, "消息类型：0x08:接收到server返回的设备实时状态消息");
+						////printInformation(1, "消息类型：0x08:接收到server返回的设备实时状态消息");
 
 						/* 对接收的设备实时状态消息进行处理 */
 						byte[] buffRecvReal = new byte[numRecv];
@@ -486,12 +486,12 @@ public class Application extends JFrame implements ActionListener {
 						break;
 						
 					case 0x0B:
-						printInformation(1, "消息类型：0x0B:接收到server返回的设备实时modbusdata监测数据");
+						////printInformation(1, "消息类型：0x0B:接收到server返回的设备实时modbusdata监测数据");
 						String[] strModbusDataMsg = new String[4]; // 用来存放下面4个变量
 						if(numRecv > 1){
 							// 1.在工具类中写一个方法，返回一个数组：时间 + modbus终端IP地址 + 设备ID + modbusdata监测数据
 							strModbusDataMsg = byteModbusDataToStringArray(buffRecv, numRecv);
-							printInformation(1, "消息类型：0x0B:接收到modbusdata监测数据:"+strModbusDataMsg[0]+","+strModbusDataMsg[1]+","+strModbusDataMsg[2]+","+strModbusDataMsg[3]);
+							////printInformation(1, "消息类型：0x0B:接收到modbusdata监测数据:"+strModbusDataMsg[0]+","+strModbusDataMsg[1]+","+strModbusDataMsg[2]+","+strModbusDataMsg[3]);
 							
 							// 2.将modbusdata监测数据加进modbusdata实时监测数据列表中
 							realTimeModbusDataPanel.tableModel.addRow(strModbusDataMsg);
@@ -503,12 +503,12 @@ public class Application extends JFrame implements ActionListener {
 						break;
 						
 					case 0x0C:
-						printInformation(1, "消息类型：0x0C:接收到server返回的单条设备实时状态信息");
+						////printInformation(1, "消息类型：0x0C:接收到server返回的单条设备实时状态信息");
 						String[] strModbusStateData = new String[4]; // 用来存放下面4个变量
 						if(numRecv > 1){
 							// 1.在工具类中写一个方法，返回一个数组：时间 + modbus终端IP地址 + 设备ID + 设备状态
 							strModbusStateData = byteDeviceStateToStringArray(buffRecv, numRecv);
-							printInformation(1, "消息类型：0x0C:接收到单条设备状态消息:"+strModbusStateData[0]+","+strModbusStateData[1]+","+strModbusStateData[2]+","+strModbusStateData[3]);
+							////printInformation(1, "消息类型：0x0C:接收到单条设备状态消息:"+strModbusStateData[0]+","+strModbusStateData[1]+","+strModbusStateData[2]+","+strModbusStateData[3]);
 							// 2.将modbusdata监测数据加进modbusdata实时监测数据列表中
 							stateMsgPanel.tableModel.addRow(strModbusStateData);
 							
@@ -517,7 +517,7 @@ public class Application extends JFrame implements ActionListener {
 						break;
 						
 					case 0x0D:
-						printInformation(1, "消息类型：0x0D:接收到server返回的设备实时状态树");
+						////printInformation(1, "消息类型：0x0D:接收到server返回的设备实时状态树");
 						/* 对接收的设备实时状态消息进行处理 */
 						byte[] buffRecvFirst = new byte[numRecv];
 						for (int i = 0; i < numRecv; i++) {
@@ -546,7 +546,7 @@ public class Application extends JFrame implements ActionListener {
 						break;
 						
 					case 0x0E:
-						printInformation(1, "消息类型：0x0E:接收到server返回的modbus命令");
+						////printInformation(1, "消息类型：0x0E:接收到server返回的modbus命令");
 						String strBuffRecv = new String(buffRecv);
 						// 1.解析接收到的数据
 						String strModbusOrder = strBuffRecv.substring(1, 17); // 直接将字节数组按照ascll码的方式转换成string类型
@@ -568,7 +568,7 @@ public class Application extends JFrame implements ActionListener {
 							int lengthOfTerminalIp = Integer.valueOf(strBuffRecv.substring(17,19));
 							str[1] = strBuffRecv.substring(19, 19+lengthOfTerminalIp);
 							modbusMsgPanel.tableModel.addRow(str);
-							printInformation(1, "添加modbus命令成功。");
+							////printInformation(1, "添加modbus命令成功。");
 							
 							
 						}
@@ -579,15 +579,15 @@ public class Application extends JFrame implements ActionListener {
 						break;
 						
 					case 0x0F:
-						printInformation(1, "消息类型：0x0F:上位机添加modbus命令成功。");
+						////printInformation(1, "消息类型：0x0F:上位机添加modbus命令成功。");
 						break;
 						
 					case 0x10:
-						printInformation(1, "消息类型：0x10:上位机删除modbus命令成功。");
+						////printInformation(1, "消息类型：0x10:上位机删除modbus命令成功。");
 						break;
 						
 					default:
-						printInformation(-1, "警告，接收到未知消息类型！！！");
+						////printInformation(-1, "警告，接收到未知消息类型！！！");
 						break;
 					}
 				} catch (IOException e) {
@@ -627,10 +627,10 @@ public class Application extends JFrame implements ActionListener {
 		@Override
 		public void run() {
 			//requestEquipmentStateStarted = true;
-			printInformation(1, "辅助线程->请求设备状态：建立请求设备状态的线程成功。");
+			////printInformation(1, "辅助线程->请求设备状态：建立请求设备状态的线程成功。");
 			try {
 				//while (requestEquipmentStateStarted) {
-					printInformation(1, "辅助线程->请求设备状态：开始请求各级设备的状态...");
+					////printInformation(1, "辅助线程->请求设备状态：开始请求各级设备的状态...");
 
 					// 消息类型为0x0D ，这里只需要发送一个消息类型就行，不需要附带其他数据
 					String strMsg = "0D";
@@ -671,11 +671,11 @@ public class Application extends JFrame implements ActionListener {
 		
 		@Override
 		public void run() {
-			printInformation(1, "辅助线程->请求实时监测数据：建立请求实时modbusdata监测数据的线程成功。");
+			////printInformation(1, "辅助线程->请求实时监测数据：建立请求实时modbusdata监测数据的线程成功。");
 			requestRealTimeModbusDataStarted = true;
 			try {
 				while (requestRealTimeModbusDataStarted) {
-					printInformation(1, "辅助线程->请求实时监测数据：开始请求最新的modbusdata监测数据...");
+					////printInformation(1, "辅助线程->请求实时监测数据：开始请求最新的modbusdata监测数据...");
 					
 					// 消息类型为0x0B ，这里只需要发送一个消息类型就行，不需要附带其他数据
 					String strMsg = "0B";
@@ -736,7 +736,7 @@ public class Application extends JFrame implements ActionListener {
 		// 5.发送缓冲区中所有数据
 		buffOutputStream.write(byteSendBuffArray);// ---------------------------------------------------------------------write
 		buffOutputStream.flush();
-		printInformation(1, "【方法】发送消息:发送的数据类型:" + contentOfMsg[0]+",消息长度为:"+(int)byteSendBuffArray[0]);
+		////printInformation(1, "【方法】发送消息:发送的数据类型:" + contentOfMsg[0]+",消息长度为:"+(int)byteSendBuffArray[0]);
 		
 		return 1;
 	}
@@ -953,6 +953,22 @@ public class Application extends JFrame implements ActionListener {
 	// main方法
 	public static void main(String[] args) {
 		new Application();
-		//System.out.println(Application.modbusDataToRealData("B805"));
+		//System.out.println("01030841DAF5C0428AFFFFBB0B43".length());
+		//System.out.println(Application.modbusDataToRealData("01030841DAF5C0428AFFFFBB0B43"));
+		//System.out.println(Float.intBitsToFloat(Integer.valueOf("428AFFFF",16)));
 	}
 }
+
+/*
+ * 01030841DAF5C0428AFFFFBB0B43(data error)
+ * 
+ * 
+ * 01030800000000426D0D61D50A 设备:01,命令号:03,温度:0.0,湿度:59.263065
+ * 01030800000000426D0A61D50A(data error)
+ * 
+ * 01030841D23D70424ED5090DF9 设备:01,命令号:03,温度:26.279999,湿度:51.708042
+ * 01030841D23D70424ED5090AF9(data error)
+ * 
+ * 01030841D5851C000000001AB1 设备:01,命令号:03,温度:26.689995,湿度:0.0
+ * 01030800000000428522BBC895 设备:01,命令号:03,温度:0.0,湿度:66.56783
+ * */
