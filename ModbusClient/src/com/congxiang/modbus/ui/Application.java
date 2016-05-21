@@ -903,7 +903,7 @@ public class Application extends JFrame implements ActionListener {
 		strModbusDataMsg[1] = str.substring(pos, pos + lengthOfIP); // modbus终端的IP地址
 
 		pos = pos + lengthOfIP; // 指向下位设备ID开始
-		strModbusDataMsg[2] = str.substring(pos, pos + 2); // 下位设备的ID
+		strModbusDataMsg[2] = str.substring(pos, pos + 2).equals("FF")?"Modbus终端":str.substring(pos, pos + 2); // 下位设备的ID
 
 		pos = pos + 2; // 指向modbusdata实时监测数据开始
 		strModbusDataMsg[3] = str.substring(pos, length); // modbusdata实时监测数据
