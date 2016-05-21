@@ -24,7 +24,8 @@ public class RealTimeModbusDataPanel extends JPanel {
 	 */
 	private static final long serialVersionUID = 1L;
 	public JLabel laModbusData = new JLabel("实时ModbusData监测数据列表:",SwingConstants.LEFT);
-	public JTable tableRealTimeModbusData = new JTable();
+	public JTable tableRealTimeModbusData ;
+	public JScrollPane jsptableModbusData ; // 支持滚动
 	
 	public DefaultTableModel tableModel; // 表格模型对象
 	
@@ -61,6 +62,11 @@ public class RealTimeModbusDataPanel extends JPanel {
 		*/
 		gridbaglayout.setConstraints(jsptableModbusData, new GBC(0).setWeight(1, 1).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(jsptableModbusData);
+		
+		this.tableRealTimeModbusData.getColumnModel().getColumn(0).setPreferredWidth(200);
+		this.tableRealTimeModbusData.getColumnModel().getColumn(1).setPreferredWidth(200);
+		this.tableRealTimeModbusData.getColumnModel().getColumn(2).setPreferredWidth(200);
+		this.tableRealTimeModbusData.getColumnModel().getColumn(3).setPreferredWidth(600);
 	}
 	public static void main(String[] args) {
 

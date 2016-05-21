@@ -21,6 +21,7 @@ import java.net.Socket;
 import java.util.Arrays;
 
 import javax.swing.JFrame;
+import javax.swing.JScrollBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -177,10 +178,10 @@ public class Application extends JFrame implements ActionListener {
 		modbusMsgPanel.btRefresh.addActionListener(this);
 		/* -------------------------------------------------------------------------------------------------------------------- */
 		// 设置实时modbus监测数据的列宽
-		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(0).setPreferredWidth(200);
+/*		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(0).setPreferredWidth(200);
 		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(1).setPreferredWidth(200);
 		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(2).setPreferredWidth(200);
-		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(3).setPreferredWidth(600);
+		realTimeModbusDataPanel.tableRealTimeModbusData.getColumnModel().getColumn(3).setPreferredWidth(600);*/
 		/* -------------------------------------------------------------------------------------------------------------------- */
 		
 		/* -------------------------------------------------------------------------------------------------------------------- */
@@ -496,6 +497,17 @@ public class Application extends JFrame implements ActionListener {
 							// 2.将modbusdata监测数据加进modbusdata实时监测数据列表中
 							realTimeModbusDataPanel.tableModel.addRow(strModbusDataMsg);
 							
+							// 3.将滚动条定位到最后一行
+							//JScrollBar sBar = realTimeModbusDataPanel.jsptableModbusData.getVerticalScrollBar();
+							//sBar.setValue(sBar.getMaximum());
+							/* 让滚轮自动滚到最后一行 */
+							int rowCount = realTimeModbusDataPanel.tableRealTimeModbusData.getRowCount();
+							realTimeModbusDataPanel.tableRealTimeModbusData.getSelectionModel().setSelectionInterval(rowCount-1, rowCount-1);
+							Rectangle rect = realTimeModbusDataPanel.tableRealTimeModbusData.getCellRect(rowCount-1, 0, true);
+							//modbusMsgPanel.tableModbusOrderList.repaint(); //若需要的话
+							realTimeModbusDataPanel.tableRealTimeModbusData.updateUI();//若需要的话
+							realTimeModbusDataPanel.tableRealTimeModbusData.scrollRectToVisible(rect);
+							
 						}
 						byte[] buff0B = new byte[] { 0x0B };
 						sendMsg(buffOutputStream, buff0B, 1);//---------------------------------------------------------------------write
@@ -511,6 +523,14 @@ public class Application extends JFrame implements ActionListener {
 							////printInformation(1, "消息类型：0x0C:接收到单条设备状态消息:"+strModbusStateData[0]+","+strModbusStateData[1]+","+strModbusStateData[2]+","+strModbusStateData[3]);
 							// 2.将modbusdata监测数据加进modbusdata实时监测数据列表中
 							stateMsgPanel.tableModel.addRow(strModbusStateData);
+							
+							// 3.将滚动条定位到最后一行111
+							int rowCount = stateMsgPanel.tableStateMsg.getRowCount();
+							stateMsgPanel.tableStateMsg.getSelectionModel().setSelectionInterval(rowCount-1, rowCount-1);
+							Rectangle rect = stateMsgPanel.tableStateMsg.getCellRect(rowCount-1, 0, true);
+							//modbusMsgPanel.tableModbusOrderList.repaint(); //若需要的话
+							stateMsgPanel.tableStateMsg.updateUI();//若需要的话
+							stateMsgPanel.tableStateMsg.scrollRectToVisible(rect);
 							
 						}
 						
@@ -834,7 +854,7 @@ public class Application extends JFrame implements ActionListener {
 	 * 返回值：
 	 * string[]：时间 + modbus终端的IP地址 + 下位设备ID + modbusdata
 	 * */
-	public static String[] byteModbusDataToStringArray(byte[] byteModbusData, int length) {
+	public String[] byteModbusDataToStringArray(byte[] byteModbusData, int length) {
 		int pos, lengthOfIP;
 		String[] strModbusDataMsg = new String[4];
 		String str = new String(byteModbusData);
@@ -904,23 +924,92 @@ public class Application extends JFrame implements ActionListener {
 	 * 02 03 08 41 BA 28 F6 42 62 44 B3 18 8A 
 	 * 02 03 08 41 BA 28 F6 42 62 44 B3 4D 8A
 	 * */
-	public static String modbusDataToRealData(String modbusData) {
+	public String modbusDataToRealData(String modbusData) {
 
 		/* 这里需要进行CRC校验！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！ */
 		int lengthOfModbusData = modbusData.length();
-		if(lengthOfModbusData <= 4){
-			return modbusData+"(data error)"; // 有错的数据
+		if (lengthOfModbusData <= 4) {
+			return modbusData + "(data error)"; // 有错的数据
 		}
 		// 1.重新计算CRC校验码【出去最后两个字节，string中对应的是4个字符】
 		int crc = CRC16.calcCrc16(ByteUtil.hexStringToBytes(modbusData.substring(0, lengthOfModbusData - 4)));
 		String strCRC = String.format("%04x", crc).toUpperCase();
-		
-		// 2.将计算出来的crc校验码与原数据中的进行对比
-		if ((strCRC.substring(2, 4).equals(modbusData.substring(lengthOfModbusData - 4, lengthOfModbusData - 2))) 
-				&& (strCRC.substring(0, 2).equals(modbusData.substring(lengthOfModbusData - 2, lengthOfModbusData)))) {
 
-			/* --- */
+		// 2.将计算出来的crc校验码与原数据中的进行对比
+		if ((strCRC.substring(2, 4).equals(modbusData.substring(lengthOfModbusData - 4, lengthOfModbusData - 2))) && (strCRC.substring(0, 2).equals(modbusData.substring(lengthOfModbusData - 2, lengthOfModbusData)))) {
+			/**
+			 * 解析ModbusData:
+			 * 1.提取功能码
+			 * 2.提取设备号
+			 * 3.根据不同的功能码进行不同的消息处理：（部分命令执行一次，收到回复后，需要将命令删除）
+			 * */ 
+			
+			/* 解析ModbusData消息 */
+			String strRealData = "";
+			
 			// 1.提取设备号
+			String deviceId = modbusData.substring(0, 2);
+			
+			// 2.提取功能码
+			String modbusOrder = modbusData.substring(2, 4);
+			
+			// 3.根据不同的设备号，对数据进行不同的处理
+			switch (modbusOrder) {
+			case "03": // ------读取保持寄存器
+				switch (deviceId) {
+				case "01":
+					// 提取温度
+					Float temp = Float.intBitsToFloat(Integer.valueOf(modbusData.substring(6, 14), 16));
+					// 提取湿度
+					Float humi = Float.intBitsToFloat(Integer.valueOf(modbusData.substring(14, 22), 16));
+					// 组装数据
+					strRealData = "设备:" + deviceId + ",命令号:" + modbusOrder + ",温度:" + temp + ",湿度:" + humi + "";
+					break;
+					
+				default: // 设备号不能识别，不存在这种设备
+					strRealData = modbusData + "(ERROR: 不能识别设备ID:" + deviceId + ")";
+					break;
+				}
+				break;
+				
+			case "06":// ------预置单寄存器，原样返回
+				strRealData = modbusData + "(执行成功)";
+				/* 收到回复后，将命令及时删除 */
+				
+				// 1.判断modbus命令列表中是否存在这条命令
+				for (int i = 0; i < this.modbusMsgPanel.tableModel.getRowCount(); i++) {
+					if (modbusData.equals(this.modbusMsgPanel.tableModel.getValueAt(i, 0))) {
+						
+						// 2.组装添加modbus命令的消息类型0x10,消息内容：0x10+modbus命令
+						String strDeleteModbusOrder = new String(new byte[] { 0x10 }) + modbusData;
+						String strTerminalIp = (String) modbusMsgPanel.tableModel.getValueAt(i, 1);
+						strDeleteModbusOrder = strDeleteModbusOrder + ByteUtil.intToString(strTerminalIp.length()) + strTerminalIp;
+						byte[] buffSendDeleteModbusOrder = strDeleteModbusOrder.getBytes();
+
+						// 3.将删除modbus命令的消息发送给Server程序
+						try {
+							sendMsg(buffOutputStream, buffSendDeleteModbusOrder, buffSendDeleteModbusOrder.length);// ---------------------------------------------------------------------write
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+
+						// 4.删除选中行
+						modbusMsgPanel.tableModel.removeRow(i);
+						break; // 下面的循环则不需要执行
+					}
+				}
+				break;
+
+			default: // 功能码不能识别，不存在这种功能码
+				strRealData = modbusData + "(ERROR: 不能识别功能码:" + modbusOrder + ")";
+				break;
+			}
+			
+			return strRealData;
+			
+			
+			/* ------ */
+/*			// 1.提取设备号
 			String deviceId = modbusData.substring(0, 2);
 			if (deviceId.equals("01")) {
 				// 2.提取命令号
@@ -936,11 +1025,12 @@ public class Application extends JFrame implements ActionListener {
 				String str = "设备:" + deviceId + ",命令号:" + modbusOrder + ",温度:" + temp + ",湿度:" + humi + "";
 				return str;
 			} else {
-				return modbusData+"(can not be indetified)"; // 不能解析的modbus数据
-			}
+				return modbusData + "(can not be indetified)"; // 不能解析的modbus数据
+			}*/
+			/* ------ */
 
 		} else {
-			return modbusData+"(data error)"; // 有错的数据
+			return modbusData + "(ERROR: CRC校验出错！)"; // 有错的数据
 		}
 
 	}
