@@ -7,6 +7,7 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -45,6 +46,9 @@ public class ModbusMsgPanel extends JPanel {
 	
 	public JLabel laModbusTerminalIp = new JLabel("终端IP:", SwingConstants.RIGHT);
 	public JTextField tfModbusTerminalIp = new JTextField("172.29.143.67");
+	
+	// 单选框，选择是多次执行还是单次执行
+	public JCheckBox checkBoxTimes = new JCheckBox("  单次执行");
 
 	public JButton btGenerate = new JButton("生成modbus命令，并保存到下方列表");
 
@@ -61,7 +65,7 @@ public class ModbusMsgPanel extends JPanel {
 
 		
 		// 显示表头
-		String[] columnNames = { "modbus命令" ,"终端IP"}; // 列名
+		String[] columnNames = { "modbus命令" ,"终端IP", "执行"}; // 列名
 		String[][] tableVales = {}; // 数据
 		tableModel = new DefaultTableModel(tableVales, columnNames);
 		tableModbusOrderList = new JTable(tableModel);
@@ -123,8 +127,12 @@ public class ModbusMsgPanel extends JPanel {
 		gridbaglayout.setConstraints(laModbusTerminalIp, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(laModbusTerminalIp);
 
-		gridbaglayout.setConstraints(tfModbusTerminalIp, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(tfModbusTerminalIp, new GBC(3).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfModbusTerminalIp);
+		
+		// 单选框
+		gridbaglayout.setConstraints(checkBoxTimes, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		this.add(checkBoxTimes);
 		
 
 		// 生成modbus命令按钮
@@ -139,6 +147,10 @@ public class ModbusMsgPanel extends JPanel {
 		gridbaglayout.setConstraints(btRefresh, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(btRefresh);
 */
+		this.tableModbusOrderList.getColumnModel().getColumn(0).setPreferredWidth(280);
+		this.tableModbusOrderList.getColumnModel().getColumn(1).setPreferredWidth(200);
+		this.tableModbusOrderList.getColumnModel().getColumn(2).setPreferredWidth(70);
+		//this.tableModbusOrderList.getColumnModel().getColumn(3).setPreferredWidth(0);
 	}
 
 	public static void main(String[] args) {

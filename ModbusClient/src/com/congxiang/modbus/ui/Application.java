@@ -18,13 +18,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import org.jfree.data.time.Millisecond;
 
 import com.congxiang.modbus.util.ByteUtil;
 import com.congxiang.modbus.util.CRC16;
@@ -128,6 +133,17 @@ public class Application extends JFrame implements ActionListener {
 		panelThreeInOneAndRealTimeState.add(panelThreeInOneAndStateTree);
 		panelThreeInOneAndRealTimeState.add(stateMsgPanel);
 		
+		// ***添加一个实时曲线的图表
+		Panel panelMonitorData = new Panel();
+		GridBagLayout gridBagLayoutMonitorData = new GridBagLayout();
+		panelMonitorData.setLayout(gridBagLayoutMonitorData);
+		gridBagLayoutMonitorData.setConstraints(realTimeModbusDataPanel, new GBC(0, 0, 1, 1).setWeight(1, 1).setFill(GBC.BOTH));// 列表显示数据
+		panelMonitorData.add(realTimeModbusDataPanel);
+		gridBagLayoutMonitorData.setConstraints(graphPanel, new GBC(1, 0, 1, 1).setWeight(1, 1).setFill(GBC.BOTH));// 图表显示数据
+		panelMonitorData.add(graphPanel);
+		
+		
+		
 		// 二合一面板：上述二合一面板 + 实时 modbusdata监测数据面板
 		
 		Panel panelTwoInOne = new Panel();
@@ -135,7 +151,7 @@ public class Application extends JFrame implements ActionListener {
 		panelTwoInOne.setLayout(gridLayoutTwo);
 
 		panelTwoInOne.add(panelThreeInOneAndRealTimeState);
-		panelTwoInOne.add(realTimeModbusDataPanel); 
+		panelTwoInOne.add(panelMonitorData); 
 		
 		// 添加底部状态信息栏：
 		GridBagLayout gridBagLayoutMain = new GridBagLayout();
@@ -286,10 +302,14 @@ public class Application extends JFrame implements ActionListener {
 			// 4.将新生成的modbus命令放到下方列表中,！！！！！！！！>>>>>>>>>>>这里需要判断是否连接数据库，如果没有的话，则不能添加modbus命令
 			if (isModbusMsgExist == false && isConnectServer == true) {
 				String strTerminalIP;
-				String str[] = new String[2];
+				String str[] = new String[3];
 				str[0] = strModbusMsg;
 				strTerminalIP = "/"+modbusMsgPanel.tfModbusTerminalIp.getText().trim();
 				str[1] = strTerminalIP;
+				if(modbusMsgPanel.checkBoxTimes.isSelected()){
+					str[2] = "单次";
+					modbusMsgPanel.checkBoxTimes.setSelected(false);
+				}
 				modbusMsgPanel.tableModel.addRow(str);
 				//modbusMsgPanel.tableModbusOrderList.setRowSelectionInterval(modbusMsgPanel.tableModel.getRowCount()-1, modbusMsgPanel.tableModel.getRowCount()-1);;
 				
@@ -872,7 +892,7 @@ public class Application extends JFrame implements ActionListener {
 		strModbusDataMsg[2] = str.substring(pos, pos + 2); // 下位设备的ID
 
 		// pos = pos + 2; // 指向modbusdata实时监测数据开始
-		strModbusDataMsg[3] = modbusDataToRealData(str.substring(pos, length)); // modbusdata实时监测数据
+		strModbusDataMsg[3] = modbusDataToRealData(strModbusDataMsg[0], str.substring(pos, length)); // modbusdata实时监测数据
 		
 		/** 功能：将可以识别的modbus消息转换成正常描述方式  */
 
@@ -924,7 +944,8 @@ public class Application extends JFrame implements ActionListener {
 	 * 02 03 08 41 BA 28 F6 42 62 44 B3 18 8A 
 	 * 02 03 08 41 BA 28 F6 42 62 44 B3 4D 8A
 	 * */
-	public String modbusDataToRealData(String modbusData) {
+	@SuppressWarnings("deprecation")
+	public String modbusDataToRealData(String time, String modbusData) {
 
 		/* 这里需要进行CRC校验！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！ */
 		int lengthOfModbusData = modbusData.length();
@@ -964,6 +985,17 @@ public class Application extends JFrame implements ActionListener {
 					Float humi = Float.intBitsToFloat(Integer.valueOf(modbusData.substring(14, 22), 16));
 					// 组装数据
 					strRealData = "设备:" + deviceId + ",命令号:" + modbusOrder + ",温度:" + temp + ",湿度:" + humi + "";
+					
+					// *** 将温湿度数据显示在界面上
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					try {
+						graphPanel.getTimeseries1().add(new Millisecond(sdf.parse(time)), (double)temp);
+						graphPanel.getTimeseries2().add(new Millisecond(sdf.parse(time)), (double)humi);
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
 					break;
 					
 				default: // 设备号不能识别，不存在这种设备
@@ -975,10 +1007,10 @@ public class Application extends JFrame implements ActionListener {
 			case "06":// ------预置单寄存器，原样返回
 				strRealData = modbusData + "(执行成功)";
 				/* 收到回复后，将命令及时删除 */
-				
+/*
 				// 1.判断modbus命令列表中是否存在这条命令
 				for (int i = 0; i < this.modbusMsgPanel.tableModel.getRowCount(); i++) {
-					if (modbusData.equals(this.modbusMsgPanel.tableModel.getValueAt(i, 0))) {
+					if (modbusData.substring(0, 4).equals(this.modbusMsgPanel.tableModel.getValueAt(i, 0).toString().substring(0, 4))) {
 						
 						// 2.组装添加modbus命令的消息类型0x10,消息内容：0x10+modbus命令
 						String strDeleteModbusOrder = new String(new byte[] { 0x10 }) + modbusData;
@@ -998,11 +1030,42 @@ public class Application extends JFrame implements ActionListener {
 						break; // 下面的循环则不需要执行
 					}
 				}
+*/
 				break;
 
 			default: // 功能码不能识别，不存在这种功能码
 				strRealData = modbusData + "(ERROR: 不能识别功能码:" + modbusOrder + ")";
 				break;
+			}
+			
+			// ---如果这条命令是执行一次的，则将其删除
+			for (int i = 0; i < this.modbusMsgPanel.tableModel.getRowCount(); i++) {
+				if(this.modbusMsgPanel.tableModel.getValueAt(i, 2) != null){
+					System.out.println("hahahhah");
+					if (this.modbusMsgPanel.tableModel.getValueAt(i, 2).toString().trim().equals("单次")) {
+						if (modbusData.substring(0, 4).equals(this.modbusMsgPanel.tableModel.getValueAt(i, 0).toString().substring(0, 4))) {
+
+							System.out.println("hshshsh ");
+							// 2.组装添加modbus命令的消息类型0x10,消息内容：0x10+modbus命令
+							String strDeleteModbusOrder = new String(new byte[] { 0x10 }) + modbusData;
+							String strTerminalIp = (String) modbusMsgPanel.tableModel.getValueAt(i, 1);
+							strDeleteModbusOrder = strDeleteModbusOrder + ByteUtil.intToString(strTerminalIp.length()) + strTerminalIp;
+							byte[] buffSendDeleteModbusOrder = strDeleteModbusOrder.getBytes();
+
+							// 3.将删除modbus命令的消息发送给Server程序
+							try {
+								sendMsg(buffOutputStream, buffSendDeleteModbusOrder, buffSendDeleteModbusOrder.length);// ---------------------------------------------------------------------write
+							} catch (IOException e1) {
+								e1.printStackTrace();
+							}
+
+							// 4.删除选中行
+							modbusMsgPanel.tableModel.removeRow(i);
+							break; // 下面的循环则不需要执行
+						}
+					}
+				}
+
 			}
 			
 			return strRealData;

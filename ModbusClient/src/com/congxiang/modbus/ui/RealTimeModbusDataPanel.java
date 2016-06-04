@@ -36,7 +36,7 @@ public class RealTimeModbusDataPanel extends JPanel {
 
 		
 		// 显示表头
-		String[] columnNames = { "时间", "终端IP地址" ,"下位设备ID", "ModbusData" }; // 列名
+		String[] columnNames = { "时间", "终端IP地址" ,"设备", "ModbusData" }; // 列名
 		String[][] tableVales = {}; // 数据
 		tableModel = new DefaultTableModel(tableVales, columnNames);
 		
@@ -63,10 +63,10 @@ public class RealTimeModbusDataPanel extends JPanel {
 		gridbaglayout.setConstraints(jsptableModbusData, new GBC(0).setWeight(1, 1).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(jsptableModbusData);
 		
-		this.tableRealTimeModbusData.getColumnModel().getColumn(0).setPreferredWidth(200);
+		this.tableRealTimeModbusData.getColumnModel().getColumn(0).setPreferredWidth(260);
 		this.tableRealTimeModbusData.getColumnModel().getColumn(1).setPreferredWidth(200);
-		this.tableRealTimeModbusData.getColumnModel().getColumn(2).setPreferredWidth(200);
-		this.tableRealTimeModbusData.getColumnModel().getColumn(3).setPreferredWidth(600);
+		this.tableRealTimeModbusData.getColumnModel().getColumn(2).setPreferredWidth(90);
+		this.tableRealTimeModbusData.getColumnModel().getColumn(3).setPreferredWidth(650);
 	}
 	public static void main(String[] args) {
 

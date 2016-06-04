@@ -20,6 +20,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -31,6 +32,7 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.DefaultXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.time.Millisecond;
@@ -40,18 +42,35 @@ import org.jfree.ui.RefineryUtilities;
 
 import com.congxiang.modbus.util.GBC;
 
-public class GraphPanel extends JPanel implements Runnable {
+public class GraphPanel extends JPanel {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	// 申明实时曲线对象
-	private TimeSeries timeseries1;
+	private TimeSeries timeseries1; // 温度
+	public TimeSeries getTimeseries1() {
+		return timeseries1;
+	}
+
+	public void setTimeseries1(TimeSeries timeseries1) {
+		this.timeseries1 = timeseries1;
+	}
+
+	public TimeSeries getTimeseries2() {
+		return timeseries2;
+	}
+
+	public void setTimeseries2(TimeSeries timeseries2) {
+		this.timeseries2 = timeseries2;
+	}
+
+	private TimeSeries timeseries2; // 湿度
 
 	// Value坐标轴初始值
-	private double lastValue1;
-	private double originalValue1;
+	private double lastValue1, lastValue2;
+	private double originalValue1, originalValue2;
 
 	@SuppressWarnings("rawtypes")
 	static Class class$org$jfree$data$time$Millisecond;
@@ -60,14 +79,18 @@ public class GraphPanel extends JPanel implements Runnable {
 	//
 	@SuppressWarnings("deprecation")
 	public GraphPanel() {
-		thread1 = new Thread(this);
+		////thread1 = new Thread(this);
 		originalValue1 = 100D;
+		originalValue2 = 100D;
 		// 创建时序图对象
 		timeseries1 = new TimeSeries("温度(单位:摄氏度)", GraphPanel.class$org$jfree$data$time$Millisecond != null ? GraphPanel.class$org$jfree$data$time$Millisecond : (GraphPanel.class$org$jfree$data$time$Millisecond = GraphPanel.getClass("org.jfree.data.time.Millisecond")));
 		TimeSeriesCollection timeseriescollection = new TimeSeriesCollection(timeseries1);
+		
+		timeseries2 = new TimeSeries("湿度(单位:百分比)", GraphPanel.class$org$jfree$data$time$Millisecond != null ? GraphPanel.class$org$jfree$data$time$Millisecond : (GraphPanel.class$org$jfree$data$time$Millisecond = GraphPanel.getClass("org.jfree.data.time.Millisecond")));
+		TimeSeriesCollection timeseriescollection1 = new TimeSeriesCollection(timeseries2);
 
 		// 创建jfreechart对象
-		JFreeChart jfreechart = ChartFactory.createTimeSeriesChart("RTU温度模拟量实时曲线图", "Time", "Value", timeseriescollection, true, true, false);
+		JFreeChart jfreechart = ChartFactory.createTimeSeriesChart("温湿度数据实时曲线图", "Time", "Value", timeseriescollection, true, true, false);
 		jfreechart.setBackgroundPaint(Color.white);
 		configFont(jfreechart);
 
@@ -97,7 +120,9 @@ public class GraphPanel extends JPanel implements Runnable {
 		valueaxis.setFixedAutoRange(60000D); // 60秒=60000毫秒
 		// 设定Value的范围，纵坐标
 		valueaxis = xyplot.getRangeAxis();
-		valueaxis.setRange(0.0D, 200D);
+		valueaxis.setRange(0.0D, 100D);
+		xyplot.setDataset(1, timeseriescollection1);
+		xyplot.setRenderer(1, new DefaultXYItemRenderer());
 
 		// 创建图表面板
 		ChartPanel chartpanel = new ChartPanel(jfreechart);
@@ -110,7 +135,7 @@ public class GraphPanel extends JPanel implements Runnable {
 
 		// 设置边框
 		Border etched = BorderFactory.createEtchedBorder();
-		Border border = BorderFactory.createTitledBorder(etched, "实时数据显示:");
+		Border border = BorderFactory.createTitledBorder(etched, "实时温湿度数据显示:");
 		this.setBorder(border);
 		
 		// 根据需要添加操作按钮
@@ -130,6 +155,13 @@ public class GraphPanel extends JPanel implements Runnable {
 				Millisecond millisecond1 = new Millisecond();
 				System.out.println("Series1 Now=" + millisecond1.toString());
 				timeseries1.add(millisecond1, lastValue1);
+				
+				// 随机产生曲线2的数据
+				double d2 = 2.0D * Math.random();
+				lastValue2 = originalValue2 * d2;
+				Millisecond millisecond2 = new Millisecond();
+				System.out.println("Series2 Now=" + millisecond2.toString());
+				timeseries2.add(millisecond2, lastValue2);
 
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -214,6 +246,6 @@ public class GraphPanel extends JPanel implements Runnable {
 
 		RefineryUtilities.centerFrameOnScreen(frame); // 让整个窗体在屏幕中央居中
 
-		startThread();
+		////startThread();
 	}
 }
