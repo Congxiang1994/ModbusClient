@@ -39,18 +39,21 @@ public class StateMsgPanel extends JPanel {
 		
 		// 设置边框
 		Border etched = BorderFactory.createEtchedBorder();
-		Border border = BorderFactory.createTitledBorder(etched, "设备状态:");
+		Border border = BorderFactory.createTitledBorder(etched, "设备实时状态信息列表:");
 		this.setBorder(border);
 		
 		GridBagLayout gridbaglayout = new GridBagLayout();
 		this.setLayout(gridbaglayout);
 
-		gridbaglayout.setConstraints(laState, new GBC(0).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
-		this.add(laState);
+/*		gridbaglayout.setConstraints(laState, new GBC(0).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		this.add(laState);*/
 		
 		gridbaglayout.setConstraints(jsptablefriends, new GBC(0).setWeight(1, 1).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(jsptablefriends);
-		
+		this.tableStateMsg.getColumnModel().getColumn(0).setPreferredWidth(230);
+		this.tableStateMsg.getColumnModel().getColumn(1).setPreferredWidth(180);
+		this.tableStateMsg.getColumnModel().getColumn(2).setPreferredWidth(150);
+		this.tableStateMsg.getColumnModel().getColumn(3).setPreferredWidth(80);
 	}
 	
 	public static void main(String[] args) {

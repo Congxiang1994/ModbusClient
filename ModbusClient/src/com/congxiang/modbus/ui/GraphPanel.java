@@ -90,7 +90,7 @@ public class GraphPanel extends JPanel {
 		TimeSeriesCollection timeseriescollection1 = new TimeSeriesCollection(timeseries2);
 
 		// 创建jfreechart对象
-		JFreeChart jfreechart = ChartFactory.createTimeSeriesChart("温湿度数据实时曲线图", "Time", "Value", timeseriescollection, true, true, false);
+		JFreeChart jfreechart = ChartFactory.createTimeSeriesChart("温湿度设备--实时数据曲线图", "Time", "Value", timeseriescollection, true, true, false);
 		jfreechart.setBackgroundPaint(Color.white);
 		configFont(jfreechart);
 

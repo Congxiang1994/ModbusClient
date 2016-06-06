@@ -60,7 +60,7 @@ public class ConnectServerPanel extends JPanel {
 		this.add(btConnectServer);
 
 		tfIPAddress.setText("127.0.0.1");
-		tfPort.setText("8000");
+		tfPort.setText("9000");
 
 	}
 

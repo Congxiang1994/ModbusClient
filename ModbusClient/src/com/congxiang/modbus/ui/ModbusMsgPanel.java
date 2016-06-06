@@ -27,10 +27,10 @@ public class ModbusMsgPanel extends JPanel {
 	//01030000000AC5CD
 	
 	public JLabel laDevice = new JLabel("设备号:", SwingConstants.RIGHT);
-	public JTextField tfDevice = new JTextField("02");
+	public JTextField tfDevice = new JTextField("01");
 
 	public JLabel laOrderNumber = new JLabel("命令号:", SwingConstants.RIGHT);
-	public JTextField tfOrderNumber = new JTextField("03");
+	public JTextField tfOrderNumber = new JTextField("06");
 
 	public JLabel laAddressHigh = new JLabel("地址高:", SwingConstants.RIGHT);
 	public JTextField tfAddressHigh = new JTextField("00");
@@ -45,10 +45,12 @@ public class ModbusMsgPanel extends JPanel {
 	public JTextField tfCountLow = new JTextField("04");
 	
 	public JLabel laModbusTerminalIp = new JLabel("终端IP:", SwingConstants.RIGHT);
-	public JTextField tfModbusTerminalIp = new JTextField("172.29.143.67");
+	public JTextField tfModbusTerminalIp = new JTextField("172.29.143.68"); // 172.29.143.67
+	
 	
 	// 单选框，选择是多次执行还是单次执行
-	public JCheckBox checkBoxTimes = new JCheckBox("  单次执行");
+	public JLabel laTimes = new JLabel("执行频率:", SwingConstants.RIGHT);
+	public JCheckBox checkBoxTimes = new JCheckBox("单次执行");
 
 	public JButton btGenerate = new JButton("生成modbus命令，并保存到下方列表");
 
@@ -81,66 +83,74 @@ public class ModbusMsgPanel extends JPanel {
 		GridBagLayout gridbaglayout = new GridBagLayout();
 		this.setLayout(gridbaglayout);
 
+		/* 第一行 */ 
 		// 设备号
-		gridbaglayout.setConstraints(laDevice, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(laDevice, new GBC(0,0,1,1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(laDevice);
 
-		gridbaglayout.setConstraints(tfDevice, new GBC(2).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(tfDevice, new GBC(1,0,2,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfDevice);
 
 		// 命令号
-		gridbaglayout.setConstraints(laOrderNumber, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(laOrderNumber, new GBC(3,0,1,1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(laOrderNumber);
 
-		gridbaglayout.setConstraints(tfOrderNumber, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(tfOrderNumber, new GBC(4,0,2,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfOrderNumber);
 
+		/* 第二行 */
 		// 地址高8位
-		gridbaglayout.setConstraints(laAddressHigh, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(laAddressHigh, new GBC(0,1,1,1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(laAddressHigh);
 
-		gridbaglayout.setConstraints(tfAddressHigh, new GBC(2).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(tfAddressHigh, new GBC(1,1,2,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfAddressHigh);
 
 		// 地址低8位
-		gridbaglayout.setConstraints(laAddressLow, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(laAddressLow, new GBC(3,1,1,1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(laAddressLow);
 
-		gridbaglayout.setConstraints(tfAddressLow, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(tfAddressLow, new GBC(4,1,2,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfAddressLow);
 
+		/* 第三行 */
 		// 数量高8位
-		gridbaglayout.setConstraints(laCountHigh, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(laCountHigh, new GBC(0,2,1,1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(laCountHigh);
 
-		gridbaglayout.setConstraints(tfCountHigh, new GBC(2).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(tfCountHigh, new GBC(1,2,2,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfCountHigh);
 
 		// 数量低8位
-		gridbaglayout.setConstraints(laCountLow, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(laCountLow, new GBC(3,2,1,1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(laCountLow);
 
-		gridbaglayout.setConstraints(tfCountLow, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(tfCountLow, new GBC(4,2,2,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfCountLow);
 		
+		/* 第四行 */
 		// modbus终端IP
-		gridbaglayout.setConstraints(laModbusTerminalIp, new GBC(1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(laModbusTerminalIp, new GBC(0,3,1,1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(laModbusTerminalIp);
 
-		gridbaglayout.setConstraints(tfModbusTerminalIp, new GBC(3).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(tfModbusTerminalIp, new GBC(1,3,5,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(tfModbusTerminalIp);
 		
+		/* 第五行 */
 		// 单选框
-		gridbaglayout.setConstraints(checkBoxTimes, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(laTimes, new GBC(0,4,1,1).setWeight(0, 0).setFill(GBC.BOTH).setInsets(0, 5, 0, 5));
+		this.add(laTimes);
+		
+		gridbaglayout.setConstraints(checkBoxTimes, new GBC(1,4,5,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(0, 5, 0, 5));
 		this.add(checkBoxTimes);
 		
-
+		/* 第六行 */
 		// 生成modbus命令按钮
-		gridbaglayout.setConstraints(btGenerate, new GBC(0).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(btGenerate, new GBC(0,5,6,1).setWeight(1, 0).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(btGenerate);
 
 		// modbus命令表格
-		gridbaglayout.setConstraints(jsptablefriends, new GBC(0).setWeight(1, 1).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
+		gridbaglayout.setConstraints(jsptablefriends, new GBC(0,6,6,1).setWeight(1, 1).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(jsptablefriends);
 /*
 		// 更新modbus命令按钮

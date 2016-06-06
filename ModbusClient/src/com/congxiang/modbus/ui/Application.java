@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -106,32 +107,49 @@ public class Application extends JFrame implements ActionListener {
 		panelFourInOne.add(historicalDataPanel);
 		
 	*/	
-		// 二合一面板：连接服务器 + 生成modbus命令数据
+		// 二合一面板：连接服务器 + 状态树
 		Panel panelConnectAndOrder = new Panel();
 		GridBagLayout gridBagLayoutThreeInOne = new GridBagLayout();
 		panelConnectAndOrder.setLayout(gridBagLayoutThreeInOne);
 		gridBagLayoutThreeInOne.setConstraints(connectServerPanel, new GBC(0, 0, 2, 1).setWeight(1, 0).setFill(GBC.BOTH));// 连接服务器
 		panelConnectAndOrder.add(connectServerPanel);
-		gridBagLayoutThreeInOne.setConstraints(modbusMsgPanel, new GBC(0, 2, 2, 2).setWeight(1, 1).setFill(GBC.BOTH));// 设备状态列表
-		panelConnectAndOrder.add(modbusMsgPanel);
+		gridBagLayoutThreeInOne.setConstraints(stateTreePanel, new GBC(0, 2, 2, 2).setWeight(1, 1).setFill(GBC.BOTH));// 设备状态列表
+		panelConnectAndOrder.add(stateTreePanel); // modbusMsgPanel
 
 		
 		// 二合一面板：“连接服务器 + 生成modbus命令数据” + 状态树 + 生成modbus数据
-		Panel panelThreeInOneAndStateTree = new Panel();
+/*		Panel panelThreeInOneAndStateTree = new Panel();
 		GridLayout gridLayout = new GridLayout(1, 2);
 		panelThreeInOneAndStateTree.setLayout(gridLayout);
 		
 		panelThreeInOneAndStateTree.add(panelConnectAndOrder);
-		panelThreeInOneAndStateTree.add(stateTreePanel);
+		panelThreeInOneAndStateTree.add(modbusMsgPanel); // stateTreePanel
+*/		
+		
 		//panelThreeInOne.add(stateMsgPanel); 
 		
 		// 二合一面板：上述面板+实时状态信息
 		Panel panelThreeInOneAndRealTimeState = new Panel();
-		GridLayout gridLayoutRealTimeState = new GridLayout(1, 2);
+		//GridBagLayout gridBagLayoutFourInOne = new GridBagLayout();
+		GridLayout gridLayoutRealTimeState = new GridLayout(1, 3);
 		panelThreeInOneAndRealTimeState.setLayout(gridLayoutRealTimeState);
 		
-		panelThreeInOneAndRealTimeState.add(panelThreeInOneAndStateTree);
+		// 添加连接服务器+实时状态树
+		////gridLayoutRealTimeState.setConstraints(panelConnectAndOrder, new GBC(0, 0, 1, 1).setWeight(1, 1).setFill(GBC.BOTH));// 连接服务器
+		panelThreeInOneAndRealTimeState.add(panelConnectAndOrder);
+		
+		// 添加设备实时状态列表信息
+		////gridLayoutRealTimeState.setConstraints(stateMsgPanel, new GBC(1, 0, 1, 1).setWeight(1, 1).setFill(GBC.BOTH));// 连接服务器
 		panelThreeInOneAndRealTimeState.add(stateMsgPanel);
+		
+		// 添加Modbus命令面板
+		////gridLayoutRealTimeState.setConstraints(modbusMsgPanel, new GBC(2, 0, 1, 1).setWeight(1, 1).setFill(GBC.BOTH));// 连接服务器
+		panelThreeInOneAndRealTimeState.add(modbusMsgPanel);
+		
+/*		panelThreeInOneAndRealTimeState.add(panelThreeInOneAndStateTree);
+		panelThreeInOneAndRealTimeState.add(stateMsgPanel);*/
+		
+		//------ 界面的上半部分结束-------------------------------------------------------------------
 		
 		// ***添加一个实时曲线的图表
 		Panel panelMonitorData = new Panel();
@@ -205,7 +223,7 @@ public class Application extends JFrame implements ActionListener {
 		/* 设置窗口的属性------------------------------------------------------------------------------------------------------- */
 		this.setTitle("上位机应用程序");
 		this.pack();
-		this.setSize(1200, 900);
+		this.setSize(1200, 900); // this.setSize(1200, 730);
 		this.setLocationRelativeTo(null); // 设置界面在屏幕中央显示
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 设置单击关闭按钮能够关闭主进程
 		this.setVisible(true); // 显示窗口
@@ -633,6 +651,11 @@ public class Application extends JFrame implements ActionListener {
 				} catch (IOException e) {
 					// 设置按钮状态
 					buttonState(true, false);
+					
+/*					// 清空状态树
+					nodeRoot.removeAllChildren();
+					stateTreePanel.treeModel.reload(nodeRoot); // 刷新树形结构图
+*/					
 					printInformation(-1, "警告，可能已经断开与server程序的连接！！！");
 					receiveMsgFromServerStarted = false;
 					try {
@@ -984,7 +1007,8 @@ public class Application extends JFrame implements ActionListener {
 					// 提取湿度
 					Float humi = Float.intBitsToFloat(Integer.valueOf(modbusData.substring(14, 22), 16));
 					// 组装数据
-					strRealData = "设备:" + deviceId + ",命令号:" + modbusOrder + ",温度:" + temp + ",湿度:" + humi + "";
+					DecimalFormat decimalFormat=new DecimalFormat(".000000");//构造方法的字符格式这里如果小数不足2位,会以0补足.
+					strRealData = "设备:" + deviceId + ", 命令号:" + modbusOrder + ", 温度:" + decimalFormat.format(temp) + ", 湿度:" + decimalFormat.format(humi) + "";
 					
 					// *** 将温湿度数据显示在界面上
 					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

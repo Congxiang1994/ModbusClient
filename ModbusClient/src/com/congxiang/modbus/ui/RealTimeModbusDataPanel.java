@@ -63,9 +63,9 @@ public class RealTimeModbusDataPanel extends JPanel {
 		gridbaglayout.setConstraints(jsptableModbusData, new GBC(0).setWeight(1, 1).setFill(GBC.BOTH).setInsets(5, 5, 5, 5));
 		this.add(jsptableModbusData);
 		
-		this.tableRealTimeModbusData.getColumnModel().getColumn(0).setPreferredWidth(260);
+		this.tableRealTimeModbusData.getColumnModel().getColumn(0).setPreferredWidth(270);
 		this.tableRealTimeModbusData.getColumnModel().getColumn(1).setPreferredWidth(200);
-		this.tableRealTimeModbusData.getColumnModel().getColumn(2).setPreferredWidth(90);
+		this.tableRealTimeModbusData.getColumnModel().getColumn(2).setPreferredWidth(80);
 		this.tableRealTimeModbusData.getColumnModel().getColumn(3).setPreferredWidth(650);
 	}
 	public static void main(String[] args) {
