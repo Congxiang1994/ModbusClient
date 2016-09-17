@@ -223,7 +223,7 @@ public class Application extends JFrame implements ActionListener {
 		/* 设置窗口的属性------------------------------------------------------------------------------------------------------- */
 		this.setTitle("上位机应用程序");
 		this.pack();
-		this.setSize(1200, 900); // this.setSize(1200, 730);
+		this.setSize(1200, 730); // this.setSize(1200, 730);
 		this.setLocationRelativeTo(null); // 设置界面在屏幕中央显示
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 设置单击关闭按钮能够关闭主进程
 		this.setVisible(true); // 显示窗口
